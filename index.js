@@ -1,6 +1,7 @@
 const express = require("express");
 const path = require("path");
 const { Pool } = require("pg");
+const db_name = path.join(__dirname, "data", "apptest.db");
 
 const pool = new Pool({
   user: "zpvbobzt",
