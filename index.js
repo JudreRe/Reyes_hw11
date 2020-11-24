@@ -1,17 +1,7 @@
 const express = require("express");
 const path = require("path");
 const { Pool } = require("pg");
-const db_name = path.join(__dirname, "data", "apptest.db");
-
-const pool = new Pool({
-  user: "zpvbobzt",
-  host: "salt.db.elephantsql.com",
-  database: "zpvbobzt",
-  password: "3UddYjNwJtHFfZcMWCfZOfxiqku_rJ8-",
-  port: 5432
-});
-
-console.log("Successful connection to the database");
+require('dotenv').config()
 
 // Creating the Express server
 const app = express();
@@ -20,7 +10,16 @@ const app = express();
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
 app.use(express.static(path.join(__dirname, "public")));
-app.use(express.urlencoded({ extended: false })); // <--- middleware configuration
+app.use(express.urlencoded({ extended: false }));
+
+// Connection to the PostgreSQL database
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL="postgres://dedbtqoxilmwow:92d9eeddb53da6563ee649d6ce346b0f5d4540c3c40ee17050d64485f4c4d9ab@ec2-54-156-85-145.compute-1.amazonaws.com:5432/d2592th3s9r8uo",
+  ssl: {
+    rejectUnauthorized: false
+  }
+});
+
 
 // Starting the server
 app.listen(3000, () => {
@@ -47,34 +46,14 @@ app.get("/data", (req, res) => {
   res.render("data", { model: test });
 });
 
-
+// GET /books
 app.get("/books", (req, res) => {
-  const sql = "SELECT * FROM Books ORDER BY Title"
+  const sql = "SELECT * FROM Books ORDER BY Title";
   pool.query(sql, [], (err, result) => {
     if (err) {
       return console.error(err.message);
     }
     res.render("books", { model: result.rows });
-  });
-});
-
-app.get("/books", (req, res) => {
-  const sql = "SELECT * FROM Books ORDER BY Title"
-  pool.query(sql, [], (err, result) => {
-    if (err) {
-      return console.error(err.message);
-    }
-    res.render("books", { model: result.rows });
-  });
-});
-
-// GET /edit/5
-app.get("/edit/:id", (req, res) => {
-  const id = req.params.id;
-  const sql = "SELECT * FROM Books WHERE Book_ID = $1";
-  pool.query(sql, [id], (err, result) => {
-    // if (err) ...
-    res.render("edit", { model: result.rows[0] });
   });
 });
 
@@ -83,45 +62,64 @@ app.get("/create", (req, res) => {
   res.render("create", { model: {} });
 });
 
+// POST /create
+app.post("/create", (req, res) => {
+  const sql = "INSERT INTO Books (Title, Author, Comments) VALUES ($1, $2, $3)";
+  const book = [req.body.title, req.body.author, req.body.comments];
+  pool.query(sql, book, (err, result) => {
+    if (err) {
+      return console.error(err.message);
+    }
+    res.redirect("/books");
+  });
+});
 
-// GET /delete/5
-app.get("/delete/:id", (req, res) => {
+// GET /edit/5
+app.get("/edit/:id", (req, res) => {
   const id = req.params.id;
-  const sql = "SELECT * FROM Books WHERE Book_ID = ?";
-  db.get(sql, id, (err, row) => {
-    // if (err) ...
-    res.render("delete", { model: row });
+  const sql = "SELECT * FROM Books WHERE Book_ID = $1";
+  pool.query(sql, [id], (err, result) => {
+    if (err) {
+      return console.error(err.message);
+    }
+    res.render("edit", { model: result.rows[0] });
   });
 });
 
 // POST /edit/5
 app.post("/edit/:id", (req, res) => {
   const id = req.params.id;
-  const book = [req.body.Title, req.body.Author, req.body.Comments, id];
-  const sql = "UPDATE Books SET Title = ?, Author = ?, Comments = ? WHERE (Book_ID = ?)";
-  db.run(sql, book, err => {
-    // if (err) ...
+  const book = [req.body.title, req.body.author, req.body.comments, id];
+  const sql = "UPDATE Books SET Title = $1, Author = $2, Comments = $3 WHERE (Book_ID = $4)";
+  pool.query(sql, book, (err, result) => {
+    if (err) {
+      return console.error(err.message);
+    }
     res.redirect("/books");
   });
 });
 
-// POST /create
-app.post("/create", (req, res) => {
-  const sql = "INSERT INTO Books (Title, Author, Comments) VALUES (?, ?, ?)";
-  const book = [req.body.Title, req.body.Author, req.body.Comments];
-  db.run(sql, book, err => {
-    // if (err) ...
-    res.redirect("/books");
+// GET /delete/5
+app.get("/delete/:id", (req, res) => {
+  const id = req.params.id;
+  const sql = "SELECT * FROM Books WHERE Book_ID = $1";
+  pool.query(sql, [id], (err, result) => {
+    if (err) {
+      return console.error(err.message);
+    }
+    res.render("delete", { model: result.rows[0] });
   });
 });
-
 
 // POST /delete/5
 app.post("/delete/:id", (req, res) => {
   const id = req.params.id;
-  const sql = "DELETE FROM Books WHERE Book_ID = ?";
-  db.run(sql, id, err => {
-    // if (err) ...
+  const sql = "DELETE FROM Books WHERE Book_ID = $1";
+  pool.query(sql, [id], (err, result) => {
+    if (err) {
+      return console.error(err.message);
+    }
     res.redirect("/books");
   });
 });
+
