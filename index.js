@@ -19,6 +19,7 @@ const app = express();
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
 app.use(express.static(path.join(__dirname, "public")));
+app.use(express.urlencoded({ extended: false })); // <--- middleware configuration
 
 // Starting the server
 app.listen(3000, () => {
@@ -76,4 +77,50 @@ app.get("/edit/:id", (req, res) => {
   });
 });
 
+// GET /create
+app.get("/create", (req, res) => {
+  res.render("create", { model: {} });
+});
 
+
+// GET /delete/5
+app.get("/delete/:id", (req, res) => {
+  const id = req.params.id;
+  const sql = "SELECT * FROM Books WHERE Book_ID = ?";
+  db.get(sql, id, (err, row) => {
+    // if (err) ...
+    res.render("delete", { model: row });
+  });
+});
+
+// POST /edit/5
+app.post("/edit/:id", (req, res) => {
+  const id = req.params.id;
+  const book = [req.body.Title, req.body.Author, req.body.Comments, id];
+  const sql = "UPDATE Books SET Title = ?, Author = ?, Comments = ? WHERE (Book_ID = ?)";
+  db.run(sql, book, err => {
+    // if (err) ...
+    res.redirect("/books");
+  });
+});
+
+// POST /create
+app.post("/create", (req, res) => {
+  const sql = "INSERT INTO Books (Title, Author, Comments) VALUES (?, ?, ?)";
+  const book = [req.body.Title, req.body.Author, req.body.Comments];
+  db.run(sql, book, err => {
+    // if (err) ...
+    res.redirect("/books");
+  });
+});
+
+
+// POST /delete/5
+app.post("/delete/:id", (req, res) => {
+  const id = req.params.id;
+  const sql = "DELETE FROM Books WHERE Book_ID = ?";
+  db.run(sql, id, err => {
+    // if (err) ...
+    res.redirect("/books");
+  });
+});
