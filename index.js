@@ -1,7 +1,6 @@
 const express = require("express");
 const path = require("path");
 const { Pool } = require("pg");
-require('dotenv').config()
 
 // Creating the Express server
 const app = express();
@@ -19,7 +18,6 @@ const pool = new Pool({
     rejectUnauthorized: false
   }
 });
-
 
 // Starting the server
 app.listen(3000, () => {
@@ -116,10 +114,7 @@ app.post("/delete/:id", (req, res) => {
   const id = req.params.id;
   const sql = "DELETE FROM Books WHERE Book_ID = $1";
   pool.query(sql, [id], (err, result) => {
-    if (err) {
-      return console.error(err.message);
-    }
+    // if (err) ...
     res.redirect("/books");
   });
 });
-
