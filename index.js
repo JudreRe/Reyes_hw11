@@ -1,5 +1,14 @@
 const express = require("express");
 const path = require("path");
+const { Pool } = require("pg");
+
+const pool = new Pool({
+  user: "zpvbobzt",
+  host: "salt.db.elephantsql.com",
+  database: "zpvbobzt",
+  password: "3UddYjNwJtHFfZcMWCfZOfxiqku_rJ8-",
+  port: 5432
+});
 
 console.log("Successful connection to the database");
 
